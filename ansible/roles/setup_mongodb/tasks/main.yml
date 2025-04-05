@@ -10,13 +10,16 @@
 
 
 
-- name: Add MongoDB public GPG key using apt-key (fallback method)
+- name: Download and dearmor MongoDB public GPG key
   shell: |
-    curl -fsSL https://pgp.mongodb.com/server-6.0.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb.gpg
+    curl -fsSL https://pgp.mongodb.com/server-6.0.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb.gpg
   args:
     executable: /bin/bash
-  register: gpg_key_result
-  failed_when: gpg_key_result.rc != 0
+  become: true
+  register: gpg_result
+  failed_when: gpg_result.rc != 0
+  changed_when: true
+
 
 - name: Add MongoDB 6.0 repository
   apt_repository:
