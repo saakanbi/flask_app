@@ -1,36 +1,13 @@
-- name: Ensure gnupg and curl are installed
-  apt:
-    name:
-      - gnupg
-      - curl
-    state: present
-    update_cache: yes
-
-- name: Add MongoDB public GPG key using apt_key (clean, non-blocking)
+- name: Add MongoDB public key
   apt_key:
     url: https://pgp.mongodb.com/server-6.0.asc
     state: present
 
-- name: Add MongoDB 6.0 repository
+- name: Add MongoDB repo
   apt_repository:
     repo: "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse"
     state: present
     filename: mongodb-org-6.0
-
-- name: Download libssl1.1 package (archived source)
-  get_url:
-    url: http://archive.ubuntu.com/ubuntu/pool/universe/o/openssl1.1/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
-    dest: /tmp/libssl1.1.deb
-
-
-- name: Install libssl1.1 package with retries
-  apt:
-    deb: /tmp/libssl1.1.deb
-    state: present
-  register: libssl_install
-  until: libssl_install is succeeded
-  retries: 3
-  delay: 5
 
 - name: Install MongoDB
   apt:
@@ -38,7 +15,7 @@
     update_cache: yes
     state: present
 
-- name: Start and enable MongoDB service
+- name: Start and enable MongoDB
   systemd:
     name: mongod
     state: started
@@ -49,16 +26,39 @@
     dest: /tmp/seed.js
     content: |
       use securedb;
-      db.messages.insertMany([
-        { text: "Welcome to Team32!" },
-        { text: "Your app is secured and verified." },
-        { text: "Deployed using Ansible + Jenkins + Flask!" }
-      ]);
+      if (db.messages.countDocuments() === 0) {
+        db.messages.insertMany([
+          { text: "Welcome to Team32!" },
+          { text: "Your app is secured and verified." },
+          { text: "Deployed using Ansible + Jenkins + Flask!" }
+        ]);
+      ]
 
 - name: Run seed script
   shell: mongo /tmp/seed.js
 
-- name: Remove seed script (optional cleanup)
+- name: Remove seed script
   file:
     path: /tmp/seed.js
     state: absent
+
+- name: Ping MongoDB
+  command: mongo --eval "db.adminCommand('ping')"
+  register: mongodb_ping
+  changed_when: false
+  failed_when: mongodb_ping.rc != 0
+
+- name: Check seeded messages count
+  command: mongo --eval "use securedb; db.messages.countDocuments()"
+  register: mongodb_messages
+  changed_when: false
+  failed_when: mongodb_messages.rc != 0
+
+- name: Show seeded message count
+  debug:
+    var: mongodb_messages.stdout_lines
+
+- name: View MongoDB log tail
+  command: tail -n 10 /var/log/mongodb/mongod.log
+  register: mongodb_logs
+  changed_when: false
