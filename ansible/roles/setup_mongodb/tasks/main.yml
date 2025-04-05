@@ -1,8 +1,14 @@
-- name: Add MongoDB public GPG key securely
-  ansible.builtin.get_url:
+- name: Download MongoDB GPG key (ASCII armored)
+  get_url:
     url: https://pgp.mongodb.com/server-6.0.asc
-    dest: /usr/share/keyrings/mongodb-server-6.0.gpg
+    dest: /tmp/mongodb.asc
     mode: '0644'
+
+- name: Convert GPG key to binary format (dearmor)
+  command: >
+    gpg --dearmor -o /usr/share/keyrings/mongodb-server-6.0.gpg /tmp/mongodb.asc
+  args:
+    creates: /usr/share/keyrings/mongodb-server-6.0.gpg
 
 - name: Add MongoDB 6.0 repository
   apt_repository:
@@ -15,7 +21,6 @@
     name: mongodb-org
     update_cache: yes
     state: present
-
 
 - name: Start and enable MongoDB
   systemd:
@@ -33,6 +38,11 @@
         { text: "Your app is secured and verified." },
         { text: "Deployed using Ansible + Jenkins + Flask!" }
       ]);
-      
+
 - name: Run seed script
   shell: mongo /tmp/seed.js
+
+- name: Remove seed script (optional cleanup)
+  file:
+    path: /tmp/seed.js
+    state: absent
