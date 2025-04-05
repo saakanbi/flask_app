@@ -1,25 +1,15 @@
-- name: Ensure gpg is installed
+- name: Ensure gnupg and curl are installed
   apt:
-    name: gnupg
+    name:
+      - gnupg
+      - curl
     state: present
     update_cache: yes
-  register: gpg_install
-  until: gpg_install is succeeded
-  retries: 3
-  delay: 5
 
-
-
-- name: Download and dearmor MongoDB public GPG key
-  shell: |
-    curl -fsSL https://pgp.mongodb.com/server-6.0.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb.gpg
-  args:
-    executable: /bin/bash
-  become: true
-  register: gpg_result
-  failed_when: gpg_result.rc != 0
-  changed_when: true
-
+- name: Add MongoDB public GPG key using apt_key (clean, non-blocking)
+  apt_key:
+    url: https://pgp.mongodb.com/server-6.0.asc
+    state: present
 
 - name: Add MongoDB 6.0 repository
   apt_repository:
@@ -27,7 +17,7 @@
     state: present
     filename: mongodb-org-6.0
 
-- name: Download libssl1.1 package
+- name: Download libssl1.1 package (for Ubuntu 22.04+)
   get_url:
     url: http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.1/libssl1.1_1.1.1f-1ubuntu2.22_amd64.deb
     dest: /tmp/libssl1.1.deb
@@ -47,7 +37,7 @@
     update_cache: yes
     state: present
 
-- name: Start and enable MongoDB
+- name: Start and enable MongoDB service
   systemd:
     name: mongod
     state: started
