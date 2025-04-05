@@ -1,19 +1,21 @@
-- name: Add MongoDB GPG key
-  apt_key:
+- name: Add MongoDB public GPG key securely
+  ansible.builtin.get_url:
     url: https://pgp.mongodb.com/server-6.0.asc
-    state: present
+    dest: /usr/share/keyrings/mongodb-server-6.0.gpg
+    mode: '0644'
 
-- name: Add MongoDB repository
+- name: Add MongoDB 6.0 repository
   apt_repository:
-    repo: "deb [ arch=amd64, signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse"
-    filename: mongodb-org-6.0
+    repo: "deb [ arch=amd64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse"
     state: present
+    filename: mongodb-org-6.0
 
 - name: Install MongoDB
   apt:
     name: mongodb-org
     update_cache: yes
     state: present
+
 
 - name: Start and enable MongoDB
   systemd:
