@@ -1,0 +1,25 @@
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Allow Nginx through UFW
+  ufw:
+    rule: allow
+    name: 'Nginx Full'
+
+- name: Install Certbot and plugin
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+
+- name: Obtain SSL cert with Certbot (replace with your domain/email)
+  command: >
+    certbot --nginx --non-interactive --agree-tos --redirect
+    --email your@email.com
+    -d your-domain.com
+  register: certbot_result
+  changed_when: "'Congratulations' in certbot_result.stdout"

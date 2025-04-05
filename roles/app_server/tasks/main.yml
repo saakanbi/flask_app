@@ -1,0 +1,38 @@
+---
+# tasks file for app_server
+- name: Update and upgrade apt packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Install base packages
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - git
+      - curl
+      - unzip
+      - ufw
+    state: present
+
+- name: Enable UFW firewall and allow necessary ports
+  ufw:
+    rule: allow
+    name: "{{ item }}"
+  loop:
+    - OpenSSH
+    - 'Nginx Full'
+
+- name: Enable the firewall
+  ufw:
+    state: enabled
+    policy: allow
+
+- name: Ensure the 'ubuntu' user owns /opt/
+  file:
+    path: /opt
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'

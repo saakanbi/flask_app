@@ -1,0 +1,32 @@
+- name: Add MongoDB GPG key
+  apt_key:
+    url: https://pgp.mongodb.com/server-6.0.asc
+    state: present
+
+- name: Add MongoDB repository
+  apt_repository:
+    repo: "deb [ arch=amd64, signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse"
+    filename: mongodb-org-6.0
+    state: present
+
+- name: Install MongoDB
+  apt:
+    name: mongodb-org
+    update_cache: yes
+    state: present
+
+- name: Start and enable MongoDB
+  systemd:
+    name: mongod
+    state: started
+    enabled: true
+
+- name: Seed MongoDB with starter data
+  copy:
+    dest: /tmp/seed.js
+    content: |
+      use myappdb;
+      db.users.insertOne({ name: "admin", email: "admin@example.com" });
+
+- name: Run seed script
+  shell: mongo /tmp/seed.js

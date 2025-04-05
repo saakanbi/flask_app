@@ -1,0 +1,57 @@
+- name: Install Python and pip
+  apt:
+    name: python3-pip
+    state: present
+    update_cache: yes
+
+- name: Install Flask
+  pip:
+    name: flask
+
+- name: Upload app archive
+  copy:
+    src: "{{ playbook_dir }}/../../app.tar.gz"
+    dest: /tmp/app.tar.gz
+
+- name: Upload hash file
+  copy:
+    src: "{{ playbook_dir }}/../../hash.txt"
+    dest: /tmp/hash.txt
+
+- name: Verify app archive hash
+  shell: |
+    cd /tmp
+    sha256sum -c hash.txt
+  register: hash_check
+  failed_when: "'OK' not in hash_check.stdout"
+  changed_when: false
+
+- name: Extract app
+  unarchive:
+    src: /tmp/app.tar.gz
+    dest: /opt/
+    remote_src: yes
+
+- name: Create systemd service for Flask app
+  copy:
+    dest: /etc/systemd/system/flaskapp.service
+    content: |
+      [Unit]
+      Description=Flask App
+      After=network.target
+
+      [Service]
+      User=ubuntu
+      WorkingDirectory=/opt/app
+      ExecStart=/usr/bin/python3 /opt/app/app.py
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd and start Flask app
+  systemd:
+    name: flaskapp
+    daemon_reload: true
+    enabled: true
+    state: started
