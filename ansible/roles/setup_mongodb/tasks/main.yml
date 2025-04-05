@@ -1,8 +1,22 @@
+- name: Ensure gpg is installed
+  apt:
+    name: gnupg
+    state: present
+    update_cache: yes
+  register: gpg_install
+  until: gpg_install is succeeded
+  retries: 3
+  delay: 5
+
+
+
 - name: Add MongoDB public GPG key using apt-key (fallback method)
   shell: |
     curl -fsSL https://pgp.mongodb.com/server-6.0.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb.gpg
   args:
     executable: /bin/bash
+  register: gpg_key_result
+  failed_when: gpg_key_result.rc != 0
 
 - name: Add MongoDB 6.0 repository
   apt_repository:
