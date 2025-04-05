@@ -1,24 +1,29 @@
-- name: Install Python and pip
+- name: Install Python 3 and pip
   apt:
-    name: python3-pip
+    name:
+      - python3
+      - python3-pip
     state: present
     update_cache: yes
 
-- name: Install Flask
+- name: Install Flask and PyMongo
   pip:
-    name: flask
+    name: 
+      - Flask
+      - pymongo
+    state: present
 
 - name: Upload app archive
   copy:
     src: "{{ playbook_dir }}/../../app.tar.gz"
     dest: /tmp/app.tar.gz
 
-- name: Upload hash file
+- name: Upload SHA-256 hash file
   copy:
     src: "{{ playbook_dir }}/../../hash.txt"
     dest: /tmp/hash.txt
 
-- name: Verify app archive hash
+- name: Verify SHA-256 hash
   shell: |
     cd /tmp
     sha256sum -c hash.txt
@@ -26,13 +31,14 @@
   failed_when: "'OK' not in hash_check.stdout"
   changed_when: false
 
-- name: Extract app
+- name: Extract app archive to /opt/app
   unarchive:
     src: /tmp/app.tar.gz
     dest: /opt/
     remote_src: yes
+    extra_opts: [--strip-components=1]
 
-- name: Create systemd service for Flask app
+- name: Create systemd service for Flask (Dev Server)
   copy:
     dest: /etc/systemd/system/flaskapp.service
     content: |
@@ -54,4 +60,4 @@
     name: flaskapp
     daemon_reload: true
     enabled: true
-    state: started
+    state: restarted

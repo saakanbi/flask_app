@@ -9,17 +9,50 @@
     rule: allow
     name: 'Nginx Full'
 
-- name: Install Certbot and plugin
+- name: Install Certbot and Nginx plugin
   apt:
     name:
       - certbot
       - python3-certbot-nginx
     state: present
 
-- name: Obtain SSL cert with Certbot (replace with your domain/email)
+- name: Remove default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Create Nginx config for TEAM32.ORG
+  copy:
+    dest: /etc/nginx/sites-available/team32
+    content: |
+      server {
+          listen 80;
+          server_name team32.org www.team32.org;
+
+          location / {
+              proxy_pass http://127.0.0.1:5000;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+      }
+
+- name: Enable Nginx site for TEAM32.ORG
+  file:
+    src: /etc/nginx/sites-available/team32
+    dest: /etc/nginx/sites-enabled/team32
+    state: link
+
+- name: Reload Nginx before Certbot
+  service:
+    name: nginx
+    state: reloaded
+
+- name: Obtain SSL certificate with Certbot for TEAM32.ORG
   command: >
     certbot --nginx --non-interactive --agree-tos --redirect
-    --email your@email.com
-    -d your-domain.com
+    --email oyewoleakanbi4@gmail.com
+    -d team32.org -d www.team32.org
   register: certbot_result
   changed_when: "'Congratulations' in certbot_result.stdout"

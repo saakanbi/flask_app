@@ -21,12 +21,16 @@
     state: started
     enabled: true
 
-- name: Seed MongoDB with starter data
+- name: Seed MongoDB with sample messages
   copy:
     dest: /tmp/seed.js
     content: |
-      use myappdb;
-      db.users.insertOne({ name: "admin", email: "admin@example.com" });
-
+      use securedb;
+      db.messages.insertMany([
+        { text: "Welcome to Team32!" },
+        { text: "Your app is secured and verified." },
+        { text: "Deployed using Ansible + Jenkins + Flask!" }
+      ]);
+      
 - name: Run seed script
   shell: mongo /tmp/seed.js
