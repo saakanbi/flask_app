@@ -16,13 +16,16 @@
       - ufw
     state: present
 
-- name: Enable UFW firewall and allow necessary ports
+- name: Allow UFW for SSH and Web Ports
   ufw:
     rule: allow
-    name: "{{ item }}"
+    port: "{{ item }}"
+    proto: tcp
   loop:
-    - OpenSSH
-    - 'Nginx Full'
+    - 22
+    - 80
+    - 443
+    - 5000
 
 - name: Enable the firewall
   ufw:
