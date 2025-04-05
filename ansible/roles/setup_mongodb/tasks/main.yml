@@ -1,0 +1,11 @@
+'''
+
+- name: Copy init_db.js to remote server
+  copy:
+    src: files/init_db.js
+    dest: /tmp/init_db.js
+
+- name: Seed MongoDB with starter data
+  shell: mongo /tmp/init_db.js
+
+...
