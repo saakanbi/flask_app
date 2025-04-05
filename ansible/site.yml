@@ -1,5 +1,8 @@
-roles:
-  - appserver
-  - nginx_certbot
-  - setup_mongodb
-  - deploy_app
+- name: Deploy Flask App with MongoDB and HTTPS
+  hosts: app
+  become: true
+  roles:
+    - app_server
+    - nginx_certbot
+    - setup_mongodb
+    - deploy_app
