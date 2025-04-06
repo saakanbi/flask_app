@@ -1,3 +1,6 @@
+---
+# roles/deploy_nginx/tasks/main.yml
+
 - name: Install Nginx
   apt:
     name: nginx
@@ -21,27 +24,15 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
 
-- name: Create Nginx config for TEAM32.ORG
-  copy:
-    dest: /etc/nginx/sites-available/team32
-    content: |
-      server {
-          listen 80;
-          server_name team32.org www.team32.org;
+- name: Create Nginx config for {{ domain }}
+  template:
+    src: nginx_team32.conf.j2
+    dest: /etc/nginx/sites-available/{{ domain }}
 
-          location / {
-              proxy_pass http://127.0.0.1:5000;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-          }
-      }
-
-- name: Enable Nginx site for TEAM32.ORG
+- name: Enable Nginx site for {{ domain }}
   file:
-    src: /etc/nginx/sites-available/team32
-    dest: /etc/nginx/sites-enabled/team32
+    src: /etc/nginx/sites-available/{{ domain }}
+    dest: /etc/nginx/sites-enabled/{{ domain }}
     state: link
 
 - name: Reload Nginx before Certbot
@@ -49,10 +40,16 @@
     name: nginx
     state: reloaded
 
-- name: Obtain SSL certificate with Certbot for TEAM32.ORG
+- name: Check if certificate already exists
+  stat:
+    path: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+  register: cert
+
+- name: Obtain SSL certificate with Certbot for {{ domain }}
   command: >
     certbot --nginx --non-interactive --agree-tos --redirect
-    --email oyewoleakanbi4@gmail.com
-    -d team32.org -d www.team32.org
+    --email {{ certbot_email }}
+    -d {{ domain }} -d www.{{ domain }}
+  when: not cert.stat.exists
   register: certbot_result
   changed_when: "'Congratulations' in certbot_result.stdout"
