@@ -5,4 +5,4 @@ domain: team32.org
 certbot_email: oyewoleakanbi4@gmail.com
 
 #vars for playbook dir
-playbook_dir: "/home/ec2-user/flask-dev-app"
+playbook_dir: "/home/ubuntu/jenkins-agent/workspace/flask-dev-app/ansible"
