@@ -4,3 +4,5 @@
 domain: team32.org
 certbot_email: oyewoleakanbi4@gmail.com
 
+#vars for playbook dir
+playbook_dir: "/home/ubuntu/""
