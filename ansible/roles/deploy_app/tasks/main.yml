@@ -8,19 +8,19 @@
 
 - name: Install Flask and PyMongo
   pip:
-    name: 
-      - Flask
-      - pymongo
+    name:
+      - Flask==2.3.2
+      - pymongo==4.6.1
     state: present
 
 - name: Upload app archive
   copy:
-    src: "{{ playbook_dir }}/../../app.tar.gz"
+    src: "../app.tar.gz"
     dest: /tmp/app.tar.gz
 
-- name: Upload SHA-256 hash file
+- name: Upload hash file
   copy:
-    src: "{{ playbook_dir }}/../../hash.txt"
+    src: "../hash.txt"
     dest: /tmp/hash.txt
 
 - name: Verify SHA-256 hash
@@ -34,7 +34,7 @@
 - name: Extract app archive to /opt/app
   unarchive:
     src: /tmp/app.tar.gz
-    dest: /opt/
+    dest: /opt/app
     remote_src: yes
     extra_opts: [--strip-components=1]
 

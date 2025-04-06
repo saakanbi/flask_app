@@ -32,7 +32,7 @@ pipeline {
 
         stage('Run Ansible Deployment') {
             steps {
-                sh 'mv app.tar.gz hash.txt ansible/'
+                sh 'cp app.tar.gz hash.txt ansible/'
                 dir('ansible') {
                     sh 'ansible-playbook -i ../inventory.ini site.yml'
                 }
@@ -49,3 +49,7 @@ pipeline {
         }
     }
 }
+// This Jenkinsfile is designed to run on a Jenkins agent with the label 'agent'.
+// It installs prerequisites, packages a Flask app, archives artifacts, and runs an Ansible deployment.
+// The pipeline consists of several stages:
+// 1. **Install Prerequisites on Agent**: Installs necessary packages on the Jenkins agent.             
