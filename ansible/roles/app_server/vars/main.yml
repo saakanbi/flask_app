@@ -1,2 +1,6 @@
 ---
 # vars file for app_server
+# ansible/group_vars/all.yml
+domain: team32.org
+certbot_email: oyewoleakanbi4@gmail.com
+
