@@ -15,18 +15,22 @@
     update_cache: yes
     state: present
 
+- name: Ensure mongo shell is available
+  stat:
+    path: /usr/bin/mongo
+  register: mongo_shell_check
+
+- name: Fail if mongo shell is missing
+  fail:
+    msg: "Mongo shell not found at /usr/bin/mongo"
+  when: not mongo_shell_check.stat.exists
+
+
 - name: Start and enable MongoDB
   systemd:
     name: mongod
     state: started
     enabled: true
-
-
-- name: Ensure mongo shell is installed
-  apt:
-    name: mongodb-org-shell
-    state: present
-    update_cache: yes
 
 
 - name: Seed MongoDB with sample messages
@@ -43,7 +47,8 @@
       ]
 
 - name: Run seed script
-  shell: mongo /tmp/seed.js
+  shell: /usr/bin/mongo /tmp/seed.js
+
 
 - name: Remove seed script
   file:
@@ -51,16 +56,17 @@
     state: absent
 
 - name: Ping MongoDB
-  command: mongo --eval "db.adminCommand('ping')"
+  command: /usr/bin/mongo --eval "db.adminCommand('ping')"
   register: mongodb_ping
   changed_when: false
   failed_when: mongodb_ping.rc != 0
 
 - name: Check seeded messages count
-  command: mongo --eval "use securedb; db.messages.countDocuments()"
+  command: /usr/bin/mongo --eval "use securedb; db.messages.countDocuments()"
   register: mongodb_messages
   changed_when: false
   failed_when: mongodb_messages.rc != 0
+
 
 - name: Show seeded message count
   debug:
