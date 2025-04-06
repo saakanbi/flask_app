@@ -15,6 +15,14 @@
     update_cache: yes
     state: present
 
+# 1. Install shell first
+- name: Ensure mongo shell is installed
+  apt:
+    name: mongodb-org-shell
+    state: present
+    update_cache: yes
+
+# 2. Then verify path exists
 - name: Ensure mongo shell is available
   stat:
     path: /usr/bin/mongo
@@ -24,6 +32,7 @@
   fail:
     msg: "Mongo shell not found at /usr/bin/mongo"
   when: not mongo_shell_check.stat.exists
+
 
 
 - name: Start and enable MongoDB
