@@ -9,38 +9,28 @@
     state: present
     filename: mongodb-org-6.0
 
-- name: Install MongoDB
+- name: Install MongoDB (includes mongosh)
   apt:
     name: mongodb-org
     update_cache: yes
     state: present
 
-# 1. Install shell first
-- name: Ensure mongo shell is installed
-  apt:
-    name: mongodb-org-shell
-    state: present
-    update_cache: yes
-
-# 2. Then verify path exists
-- name: Ensure mongo shell is available
-  stat:
-    path: /usr/bin/mongo
-  register: mongo_shell_check
-
-- name: Fail if mongo shell is missing
-  fail:
-    msg: "Mongo shell not found at /usr/bin/mongo"
-  when: not mongo_shell_check.stat.exists
-
-
-
-- name: Start and enable MongoDB
+- name: Start and enable MongoDB service
   systemd:
     name: mongod
     state: started
     enabled: true
 
+# Detect shell path: mongosh is the new default
+- name: Check for mongosh
+  stat:
+    path: /usr/bin/mongosh
+  register: mongosh_check
+
+- name: Fail if mongosh is missing
+  fail:
+    msg: "mongosh shell not found! MongoDB shell required to seed the database."
+  when: not mongosh_check.stat.exists
 
 - name: Seed MongoDB with sample messages
   copy:
@@ -53,11 +43,10 @@
           { text: "Your app is secured and verified." },
           { text: "Deployed using Ansible + Jenkins + Flask!" }
         ]);
-      ]
+      }
 
-- name: Run seed script
-  shell: /usr/bin/mongo /tmp/seed.js
-
+- name: Run seed script using mongosh
+  shell: /usr/bin/mongosh /tmp/seed.js
 
 - name: Remove seed script
   file:
@@ -65,17 +54,16 @@
     state: absent
 
 - name: Ping MongoDB
-  command: /usr/bin/mongo --eval "db.adminCommand('ping')"
+  command: /usr/bin/mongosh --eval "db.adminCommand('ping')"
   register: mongodb_ping
   changed_when: false
   failed_when: mongodb_ping.rc != 0
 
 - name: Check seeded messages count
-  command: /usr/bin/mongo --eval "use securedb; db.messages.countDocuments()"
+  command: /usr/bin/mongosh --eval "use securedb; db.messages.countDocuments()"
   register: mongodb_messages
   changed_when: false
   failed_when: mongodb_messages.rc != 0
-
 
 - name: Show seeded message count
   debug:
