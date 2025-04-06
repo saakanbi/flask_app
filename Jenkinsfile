@@ -9,8 +9,8 @@ pipeline {
         stage('Install Prerequisites on Agent') {
             steps {
                 sh '''
-                    sudo apt update
-                    sudo apt install -y git ansible python3-pip curl unzip
+                    sudo yum update
+                    sudo yum install -y git ansible python3-pip curl unzip
                 '''
             }
         }
