@@ -31,13 +31,14 @@ pipeline {
         }
 
         stage('Run Ansible Deployment') {
-            steps {
-                dir('ansible') {
-                    sh 'ansible-playbook -i ../inventory.ini site.yml'
-                }
-            }
+    steps {
+        sh 'mv app.tar.gz hash.txt ansible/'
+        dir('ansible') {
+            sh 'ansible-playbook -i ../inventory.ini site.yml'
         }
     }
+}
+
 
     post {
         success {
