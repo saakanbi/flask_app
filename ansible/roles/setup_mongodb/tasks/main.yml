@@ -21,6 +21,14 @@
     state: started
     enabled: true
 
+
+- name: Ensure mongo shell is installed
+  apt:
+    name: mongodb-org-shell
+    state: present
+    update_cache: yes
+
+
 - name: Seed MongoDB with sample messages
   copy:
     dest: /tmp/seed.js
