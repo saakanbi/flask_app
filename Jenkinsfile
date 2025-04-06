@@ -1,34 +1,30 @@
 pipeline {
-    agent { label 'agent' } // Replace with actual agent label or use 'any'
+    agent { label 'agent' }
 
     environment {
-        PROJECT_DIR = "${WORKSPACE}/project"
+        PROJECT_DIR = "${WORKSPACE}" // Now it points to the root directly
     }
 
     stages {
         stage('Package Flask App') {
             steps {
-                dir('project') {
-                    sh '''
-                        tar -czvf app.tar.gz app/
-                        sha256sum app.tar.gz > hash.txt
-                    '''
-                }
+                sh '''
+                    tar -czvf app.tar.gz app/
+                    sha256sum app.tar.gz > hash.txt
+                '''
             }
         }
 
         stage('Archive Artifacts') {
             steps {
-                archiveArtifacts artifacts: 'project/app.tar.gz, project/hash.txt', fingerprint: true
+                archiveArtifacts artifacts: 'app.tar.gz, hash.txt', fingerprint: true
             }
         }
 
         stage('Run Ansible Deployment') {
             steps {
-                dir('project/ansible') {
-                    sh '''
-                        ansible-playbook -i inventory.ini site.yml
-                    '''
+                dir('ansible') {
+                    sh 'ansible-playbook -i ../inventory.ini site.yml'
                 }
             }
         }
@@ -36,10 +32,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment complete! Visit your app via EC2 public IP.'
+            echo '✅ Deployment complete! Visit your app on the server.'
         }
         failure {
-            echo '❌ Deployment failed. Check the console output above for details.'
+            echo '❌ Deployment failed. Check the logs above.'
         }
     }
 }
