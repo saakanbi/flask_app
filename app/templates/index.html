@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html>
-<head><title>Secure Flask App</title></head>
+<head>
+  <title>Secure Flask App</title>
+</head>
 <body>
+  <!-- ✅ Team32 logo -->
+  <img src="{{ url_for('static', filename='team32.png') }}" alt="Team32 Logo" style="width:300px; display:block; margin:auto;">
+
   <h1>Secure DevOps app deployed with verified artifact!</h1>
   <h2>This app was built by Oyewole, Yaro & MJ </h2>
+
   <ul>
     {% for msg in messages %}
-    <li><strong>{{ msg['sender'] }}</strong>: {{ msg['content'] }}</li>
-
+      <li><strong>{{ msg['sender'] }}</strong>: {{ msg['content'] }}</li>
     {% endfor %}
   </ul>
 </body>
