@@ -21,7 +21,6 @@
     state: started
     enabled: true
 
-# Detect shell path: mongosh is the new default
 - name: Check for mongosh
   stat:
     path: /usr/bin/mongosh
@@ -32,31 +31,38 @@
     msg: "mongosh shell not found! MongoDB shell required to seed the database."
   when: not mongosh_check.stat.exists
 
-- name: Copy MongoDB seed script
+- name: Copy MongoDB additive seed script
   copy:
     dest: /tmp/seed.js
     content: |
       use securedb;
-      if (db.messages.countDocuments() === 0) {
-        db.messages.insertMany([
-          { sender: "admin", content: "Hello from MongoDB, Welcome to Team32!" },
-          { sender: "system", content: "Your app is secured and verified." },
-          { sender: "devops", content: "Deployed using Ansible + Jenkins + Flask!" }
-        ]);
-        print("✅ Messages seeded.");
-      } else {
-        print("⚠️ Messages already exist.");
+
+      function seedIfNotExists(sender, content) {
+        if (!db.messages.findOne({ sender: sender, content: content })) {
+          db.messages.insertOne({
+            sender: sender,
+            content: content,
+            timestamp: new Date()
+          });
+          print("✅ Added message from " + sender);
+        } else {
+          print("ℹ️ Message from " + sender + " already exists.");
+        }
       }
+
+      seedIfNotExists("admin", "Hello from MongoDB, Welcome to Team32!");
+      seedIfNotExists("system", "Your app is secured and verified.");
+      seedIfNotExists("devops", "Deployed using Ansible + Jenkins + Flask!");
+      seedIfNotExists("ops", "Monitoring is coming soon.");
 
 - name: Run MongoDB seed script
   shell: mongosh < /tmp/seed.js
   register: seed_output
-  changed_when: "'seeded' in seed_output.stdout"
+  changed_when: "'Added message' in seed_output.stdout"
 
 - name: Show seed result
   debug:
     var: seed_output.stdout_lines
-
 
 - name: Ping MongoDB
   command: /usr/bin/mongosh --eval "db.adminCommand('ping')"
