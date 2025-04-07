@@ -31,29 +31,30 @@
     msg: "mongosh shell not found! MongoDB shell required to seed the database."
   when: not mongosh_check.stat.exists
 
-- name: Copy MongoDB additive seed script
+- name: Copy MongoDB upsert-based seed script
   copy:
     dest: /tmp/seed.js
     content: |
       use securedb;
 
-      function seedIfNotExists(sender, content) {
-        if (!db.messages.findOne({ sender: sender, content: content })) {
-          db.messages.insertOne({
-            sender: sender,
-            content: content,
-            timestamp: new Date()
-          });
-          print("✅ Added message from " + sender);
-        } else {
-          print("ℹ️ Message from " + sender + " already exists.");
-        }
+      function upsertMessage(sender, content) {
+        db.messages.updateOne(
+          { sender: sender },
+          {
+            $set: {
+              content: content,
+              timestamp: new Date()
+            }
+          },
+          { upsert: true }
+        );
+        print("✅ Upserted message from " + sender);
       }
 
-      seedIfNotExists("admin", "Hello from MongoDB, Welcome to Team32!");
-      seedIfNotExists("system", "Your app is secured and verified.");
-      seedIfNotExists("devops", "Deployed using Ansible + Jenkins + Flask!");
-      seedIfNotExists("ops", "Monitoring is coming soon.");
+      upsertMessage("admin", "Hello from MongoDB, Welcome to Team32!");
+      upsertMessage("system", "Your app is secured and verified.");
+      upsertMessage("devops", "Deployed using Ansible + Jenkins + Flask!");
+      upsertMessage("ops", "Monitoring is coming soon.");
 
 - name: Run MongoDB seed script
   shell: mongosh < /tmp/seed.js
