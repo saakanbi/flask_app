@@ -39,7 +39,7 @@
       use securedb;
       if (db.messages.countDocuments() === 0) {
         db.messages.insertMany([
-          { sender: "admin", content: "Welcome to Team32!" },
+          { sender: "admin", content: "Hello from MongoDB, Welcome to Team32!" },
           { sender: "system", content: "Your app is secured and verified." },
           { sender: "devops", content: "Deployed using Ansible + Jenkins + Flask!" }
         ]);
