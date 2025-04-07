@@ -32,26 +32,31 @@
     msg: "mongosh shell not found! MongoDB shell required to seed the database."
   when: not mongosh_check.stat.exists
 
-- name: Seed MongoDB with sample messages
+- name: Copy MongoDB seed script
   copy:
     dest: /tmp/seed.js
     content: |
       use securedb;
       if (db.messages.countDocuments() === 0) {
         db.messages.insertMany([
-          { text: "Welcome to Team32!" },
-          { text: "Your app is secured and verified." },
-          { text: "Deployed using Ansible + Jenkins + Flask!" }
+          { sender: "admin", content: "Welcome to Team32!" },
+          { sender: "system", content: "Your app is secured and verified." },
+          { sender: "devops", content: "Deployed using Ansible + Jenkins + Flask!" }
         ]);
+        print("✅ Messages seeded.");
+      } else {
+        print("⚠️ Messages already exist.");
       }
 
-- name: Run seed script using mongosh
-  shell: /usr/bin/mongosh /tmp/seed.js
+- name: Run MongoDB seed script
+  shell: mongosh < /tmp/seed.js
+  register: seed_output
+  changed_when: "'seeded' in seed_output.stdout"
 
-- name: Remove seed script
-  file:
-    path: /tmp/seed.js
-    state: absent
+- name: Show seed result
+  debug:
+    var: seed_output.stdout_lines
+
 
 - name: Ping MongoDB
   command: /usr/bin/mongosh --eval "db.adminCommand('ping')"
