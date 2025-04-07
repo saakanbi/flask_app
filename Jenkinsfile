@@ -10,7 +10,7 @@ pipeline {
             steps {
                 sh '''
                     sudo yum update -y
-                    sudo yum install -y git ansible python3-pip curl unzip
+                    sudo yum install -y git ansible python3-pip curl unzip jq
                 '''
             }
         }
@@ -27,6 +27,19 @@ pipeline {
         stage('Archive Artifacts') {
             steps {
                 archiveArtifacts artifacts: 'app.tar.gz, hash.txt', fingerprint: true
+            }
+        }
+
+        // ✅ INSERTED HERE
+        stage('Update DNS via Cloudflare') {
+            environment {
+                CF_API_TOKEN = credentials('CF_API_TOKEN')
+            }
+            steps {
+                sh '''
+                    chmod +x ./update-cloudflare-dns.sh
+                    ./update-cloudflare-dns.sh
+                '''
             }
         }
 
@@ -49,7 +62,3 @@ pipeline {
         }
     }
 }
-// This Jenkinsfile is designed to run on a Jenkins agent with the label 'agent'.
-// It installs prerequisites, packages a Flask app, archives artifacts, and runs an Ansible deployment.
-// The pipeline consists of several stages:
-// 1. **Install Prerequisites on Agent**: Installs necessary packages on the Jenkins agent.             
