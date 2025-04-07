@@ -31,35 +31,15 @@
     msg: "mongosh shell not found! MongoDB shell required to seed the database."
   when: not mongosh_check.stat.exists
 
-- name: Copy MongoDB upsert-based seed script
+- name: Copy init_db.js to remote server
   copy:
-    dest: /tmp/seed.js
-    content: |
-      use securedb;
+    src: init_db.js
+    dest: /tmp/init_db.js
 
-      function upsertMessage(sender, content) {
-        db.messages.updateOne(
-          { sender: sender },
-          {
-            $set: {
-              content: content,
-              timestamp: new Date()
-            }
-          },
-          { upsert: true }
-        );
-        print("✅ Upserted message from " + sender);
-      }
-
-      upsertMessage("admin", "Hello from MongoDB, Welcome to Team32!");
-      upsertMessage("system", "Your app is secured and verified.");
-      upsertMessage("devops", "Deployed using Ansible + Jenkins + Flask!");
-      upsertMessage("ops", "Monitoring is coming soon.");
-
-- name: Run MongoDB seed script
-  shell: mongosh < /tmp/seed.js
+- name: Seed MongoDB with starter data
+  shell: mongosh /tmp/init_db.js
   register: seed_output
-  changed_when: "'Added message' in seed_output.stdout"
+  changed_when: "'Seeded' in seed_output.stdout or 'Upserted' in seed_output.stdout or 'Inserted' in seed_output.stdout"
 
 - name: Show seed result
   debug:
