@@ -65,3 +65,4 @@
   command: tail -n 10 /var/log/mongodb/mongod.log
   register: mongodb_logs
   changed_when: false
+
