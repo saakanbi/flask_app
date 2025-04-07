@@ -37,9 +37,9 @@
     dest: /tmp/init_db.js
 
 - name: Seed MongoDB with starter data
-  shell: mongosh /tmp/init_db.js
+  shell: mongosh < /tmp/init_db.js
   register: seed_output
-  changed_when: "'Seeded' in seed_output.stdout or 'Upserted' in seed_output.stdout or 'Inserted' in seed_output.stdout"
+  changed_when: "'Added message' in seed_output.stdout"
 
 - name: Show seed result
   debug:
